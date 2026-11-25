@@ -66,7 +66,7 @@ project's forge menu (GITHUB, GITLAB) when its remote is on a forge. Its descrip
 
 ## Rules
 
-- Never push, never post, never comment on, move, close or edit a issue, and never open a pull request: the
+- Never push, never post, never comment on, move, close or edit an issue, and never open a pull request: the
   person does that after reading your work.
 - Run the project's tools in its containers (DDEV by default, or the runtime its own files and AGENTS.md name), never
   raw on the host.

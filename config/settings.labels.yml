@@ -38,7 +38,7 @@ network_domains:
   info: 'The package registries the project needs (registry.npmjs.org, repo.packagist.org…). None by default. Edit it in the Raw YAML tab.'
 allow_web:
   label: Web tools in the author session
-  info: 'WebFetch and WebSearch. Off by default: a link in a issue is not opened.'
+  info: 'WebFetch and WebSearch. Off by default: a link in an issue is not opened.'
   options:
     "false": "Off (default)"
     "true": "On"
@@ -50,7 +50,7 @@ comments_from:
     all: "All comments"
     none: "No comments"
 outsider_items:
-  label: Work packages from outside the project
+  label: Issues from outside the project
   info: 'Opened, or last edited, by a Reporter or someone with no membership. Analyze: analyze only, unless you tick a confirmation that names them. Refuse: analyze only.'
   options:
     analyze: "Analyze only, unless confirmed by name (default)"

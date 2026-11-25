@@ -285,3 +285,12 @@ test('no step phrase of the skill names the platform, and its features are whole
     assert.doesNotMatch(src, /dD\.123123ddd|password "[^"]+" with/, `${f} writes no password of an account`);
   }
 });
+
+test('no settings comment, label or item carries the words of another platform, or "a issue"', () => {
+  for (const f of [manifest.settingsTemplate, manifest.labels, ...ITEM_FILES.filter((x) => x.endsWith('.md'))]) {
+    const src = read(f);
+    assert.doesNotMatch(src, /work package|commenter/i, `${f} speaks of Redmine's issues and roles`);
+    assert.doesNotMatch(src, /\bReader\b(?! Test)/, `${f}: Redmine's role is a Reporter`);
+    assert.doesNotMatch(src, /\ba issue/i, `${f}: an issue`);
+  }
+});

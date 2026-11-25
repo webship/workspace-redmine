@@ -25,5 +25,5 @@ network_domains: []
 allow_web: false
 # The comments a snapshot keeps: members (Managers and Developers), all, none.
 comments_from: members
-# A issue from outside the project (a Reader, a commenter, no membership): analyze (work it only after a confirmation that names its author) or refuse.
+# An issue from outside the project (a Reporter, another role, no membership): analyze (work it only after a confirmation that names its author) or refuse.
 outsider_items: analyze
