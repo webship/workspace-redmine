@@ -1,0 +1,120 @@
+{
+  "name": "@webship.co/workspace-redmine",
+  "version": "1.0.0",
+  "description": "Redmine for Webship Workspace: the builder (`cmd-redmine-project.sh`, a site of the open-source project management and issue tracking software from the official image on the project's own PostgreSQL, in containers: DDEV by default, Docker Compose too, with the default accounts as members of a sample project and its issues and version) and its tool in every sites folder, the Redmine step pack wired into the testing setup, the issues of a Redmine as work items of the tracker family (list, read, analyze, and do the work with the workspace's AI CLI on a branch; notes, time, moves and assignees after a person's click, writes off by default), and its AI items in their folders.",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "license": "ISC",
+  "engines": {
+    "node": ">=24"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webship/workspace-redmine.git"
+  },
+  "files": [
+    "dist/src",
+    "ai",
+    "commands",
+    "config",
+    "features",
+    "scripts",
+    "testing",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "workspacePlugin": {
+    "name": "redmine",
+    "label": "Redmine",
+    "summary": "A builder for Redmine sites (the official image, default accounts, a sample project and version), and its issues as work items",
+    "needs": [
+      [
+        "dev",
+        "test",
+        "sandboxes",
+        "demos"
+      ],
+      "ai-agents",
+      "ai-skills",
+      "ai-commands",
+      "ai-prompts"
+    ],
+    "typeActions": {
+      "redmine": [
+        "sites",
+        "code"
+      ]
+    },
+    "settingsFile": "plugin.redmine.settings.yml",
+    "settingsTemplate": "config/plugin.redmine.settings.yml",
+    "labels": "config/settings.labels.yml",
+    "commands": {
+      "types": [
+        "sites"
+      ],
+      "workspaces": [
+        "dev",
+        "test",
+        "sandboxes",
+        "demos"
+      ],
+      "files": [
+        "commands/cmd-redmine-project.sh",
+        "commands/cmd-tools-redmine-cli.sh"
+      ]
+    },
+    "scripts": {
+      "functions": [
+        "scripts/functions/fun-redmine.sh"
+      ],
+      "args": [
+        "scripts/args/arg-redmine.sh",
+        "scripts/args/arg-redmine-cli.sh"
+      ],
+      "machine": [
+        "scripts/docker-compose.redmine.yaml",
+        "scripts/redmine-site.rb",
+        "scripts/redmine-serve.sh",
+        "testing/site.feature"
+      ]
+    },
+    "ai": {
+      "agents": [
+        "ai/agents/redmine-site-builder.md",
+        "ai/agents/redmine-tester.md",
+        "ai/agents/redmine-issue-worker.md"
+      ],
+      "skills": [
+        "ai/skills/redmine-scenarios"
+      ],
+      "commands": [
+        "ai/commands/redmine-test.md"
+      ],
+      "prompts": [
+        "ai/prompts/redmine-build-and-test.md",
+        "ai/prompts/redmine-issue-to-branch.md"
+      ]
+    },
+    "features": [
+      "features/redmine.feature",
+      "features/redmine-runtimes.feature"
+    ],
+    "featuresSite": "cmd-redmine-project.sh ci-redmine --install --add-users --sample-content --runtime docker"
+  },
+  "dependencies": {
+    "@webship.co/workspace-tracker": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@webship.co/workspace-plugin-api": "^1.0.11",
+    "typescript": "^5.9.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

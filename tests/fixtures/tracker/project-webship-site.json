@@ -1,0 +1,14 @@
+{
+ "project": {
+  "id": 1,
+  "name": "Webship site",
+  "identifier": "webship-site",
+  "description": "The sample project of a Webship Workspace site: its issues, version and members are what the step pack and the tracker are tested on.",
+  "homepage": "",
+  "status": 1,
+  "is_public": false,
+  "inherit_members": false,
+  "created_on": "2026-11-25T09:43:32Z",
+  "updated_on": "2026-11-25T09:43:32Z"
+ }
+}

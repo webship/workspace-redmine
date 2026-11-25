@@ -1,0 +1,29 @@
+# Redmine — core/config/plugin.redmine.settings.yml
+#
+# The Redmine the dashboard reads issues from: a site the builder made (https://<name>.ddev.site), or
+# your own. The token is the API key of an account there (My account → API access key). Never printed.
+# The Redmine address, without a trailing slash.
+url: CHANGE_ME
+# An API key of the account the dashboard reads (and, with writes on, writes) as.
+token: CHANGE_ME
+# The issues as work items (the tracker family). See @webship.co/workspace-tracker for every key.
+# Writes to Redmine: notes, worklogs (time entries), moves through the workflow, assignees, new issues. Off by default.
+allow_writes: false
+# Author sessions at once.
+max_agents: 1
+# The Redmine project (its identifier) a workspace project works against when it remembers none.
+default_scope: ""
+# The Redmine projects (identifiers) the list may be switched to; empty is any.
+scopes: []
+# branch: a new branch in the project; worktree: a git worktree outside the workspace folders.
+work_in: branch
+# required: Claude Code's sandbox for the author session, and no session without it; off: a person's choice.
+sandbox: required
+# Domains the sandbox allows (the project's package registries).
+network_domains: []
+# WebFetch and WebSearch in the author session.
+allow_web: false
+# The comments a snapshot keeps: members (Managers and Developers), all, none.
+comments_from: members
+# A issue from outside the project (a Reader, a commenter, no membership): analyze (work it only after a confirmation that names its author) or refuse.
+outsider_items: analyze

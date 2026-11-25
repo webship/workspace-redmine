@@ -1,0 +1,38 @@
+# Redmine of this project: the official image on the project's own PostgreSQL (the container tool's db service),
+# served at the project's address; the project's web container keeps the mail catcher. Written by the Redmine builder of
+# the workspace (the plugin's docker-compose.redmine.yaml); build again rather than editing by hand. The site's own
+# values (its secret key) are in redmine/env, which only you can read.
+services:
+  web:
+    environment:
+      - HTTP_EXPOSE=8093:80,8025:8025
+      - HTTPS_EXPOSE=8457:80,8026:8025
+  redmine:
+    image: "redmine:${REDMINE_VERSION:-7.0.3}"
+    container_name: ddev-${DDEV_SITENAME}-redmine
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    restart: "no"
+    expose:
+      - "3000"
+    depends_on:
+      - db
+    env_file:
+      - ${DDEV_APPROOT}/redmine/env
+    volumes:
+      - redmine_files:/usr/src/redmine/files
+      # The plugin's scripts, which the builder and the tool run in this container.
+      - ${DDEV_APPROOT}/redmine:/opt/webship:ro
+    environment:
+      VIRTUAL_HOST: ${DDEV_HOSTNAME}
+      HTTP_EXPOSE: "80:3000"
+      HTTPS_EXPOSE: "443:3000"
+      REDMINE_DB_POSTGRES: db
+      REDMINE_DB_USERNAME: db
+      REDMINE_DB_PASSWORD: db
+      REDMINE_DB_DATABASE: db
+# Named after the project, so removing the project removes it with its database, and a new build starts empty.
+volumes:
+  redmine_files:
+    name: ddev-${DDEV_SITENAME}-redmine-files

@@ -1,0 +1,58 @@
+{
+ "memberships": [
+  {
+   "id": 1,
+   "project": {
+    "id": 1,
+    "name": "Webship site"
+   },
+   "user": {
+    "id": 6,
+    "name": "Owner Test"
+   },
+   "roles": [
+    {
+     "id": 3,
+     "name": "Manager"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "project": {
+    "id": 1,
+    "name": "Webship site"
+   },
+   "user": {
+    "id": 7,
+    "name": "Member Test"
+   },
+   "roles": [
+    {
+     "id": 4,
+     "name": "Developer"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "project": {
+    "id": 1,
+    "name": "Webship site"
+   },
+   "user": {
+    "id": 8,
+    "name": "Reader Test"
+   },
+   "roles": [
+    {
+     "id": 5,
+     "name": "Reporter"
+    }
+   ]
+  }
+ ],
+ "total_count": 3,
+ "offset": 0,
+ "limit": 100
+}
