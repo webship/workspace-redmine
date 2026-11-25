@@ -16,8 +16,11 @@ services:
     restart: "no"
     expose:
       - "3000"
+    # The image migrates the database once as it starts, and stops if PostgreSQL does not answer yet: a new project's
+    # database is still being made when its container starts, so Redmine waits for it to be healthy.
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - ${DDEV_APPROOT}/redmine/env
     volumes:
