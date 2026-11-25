@@ -1,0 +1,67 @@
+{
+ "issue": {
+  "id": 3,
+  "project": {
+   "id": 1,
+   "name": "Webship site"
+  },
+  "tracker": {
+   "id": 2,
+   "name": "Feature"
+  },
+  "status": {
+   "id": 1,
+   "name": "New",
+   "is_closed": false
+  },
+  "priority": {
+   "id": 2,
+   "name": "Normal"
+  },
+  "author": {
+   "id": 9,
+   "name": "Stranger Test"
+  },
+  "subject": "An issue opened by someone outside the project",
+  "description": "Please also print the date after the greeting.\r\n",
+  "start_date": null,
+  "due_date": null,
+  "done_ratio": 0,
+  "is_private": false,
+  "estimated_hours": null,
+  "total_estimated_hours": null,
+  "spent_hours": 0.0,
+  "total_spent_hours": 0.0,
+  "created_on": "2026-11-25T09:43:34Z",
+  "updated_on": "2026-11-25T09:43:34Z",
+  "closed_on": null,
+  "journals": [],
+  "allowed_statuses": [
+   {
+    "id": 1,
+    "name": "New",
+    "is_closed": false
+   },
+   {
+    "id": 2,
+    "name": "In Progress",
+    "is_closed": false
+   },
+   {
+    "id": 3,
+    "name": "Resolved",
+    "is_closed": false
+   },
+   {
+    "id": 4,
+    "name": "Feedback",
+    "is_closed": false
+   },
+   {
+    "id": 5,
+    "name": "Closed",
+    "is_closed": true
+   }
+  ]
+ }
+}

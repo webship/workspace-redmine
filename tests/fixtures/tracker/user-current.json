@@ -1,0 +1,15 @@
+{
+ "user": {
+  "id": 7,
+  "login": "member",
+  "admin": false,
+  "firstname": "Member",
+  "lastname": "Test",
+  "created_on": "2026-11-25T09:43:32Z",
+  "updated_on": "2026-11-25T09:43:32Z",
+  "last_login_on": null,
+  "passwd_changed_on": "2026-11-25T09:43:32Z",
+  "twofa_scheme": null,
+  "api_key": "c0cfde5bead6ac4314a9cd42ed1fd7e294d1ac81"
+ }
+}
