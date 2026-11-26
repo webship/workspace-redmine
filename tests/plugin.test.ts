@@ -126,3 +126,13 @@ test('the docs say container-based, name only what ships, and carry no personal 
   assert.ok(keys.length >= 12);
   for (const k of keys) assert.ok(read('README.md').includes(`\`${k}\``), `the README describes the setting ${k}`);
 });
+
+test('the testing setup writes the accounts and the sample content in the project, and says which part did not work', () => {
+  const testing = FUN.slice(FUN.indexOf('function testing_configure_redmine()'));
+  // add_redmine_users ends in the sites folder: the sample content is asked for in the project again (#7).
+  assert.match(FUN, /^function add_redmine_users\(\) \{[\s\S]*?\n  cd \$\{WORKSPACE_ROOT\}\/\$\{doc_name\};\n  return \$\{status\} ;\n\}/m);
+  assert.match(testing, /elif ! \( cd "\$\{project_path\}" && add_redmine_users > \/dev\/null 2>&1 \) ; then/, 'the accounts, in the project');
+  assert.match(testing, /elif ! \( cd "\$\{project_path\}" && redmine_site content < \/dev\/null > \/dev\/null 2>&1 \) ; then/, 'the sample content, in the project');
+  assert.doesNotMatch(testing, /add_redmine_users[^\n]*&& redmine_site content/, 'never after add_redmine_users in one subshell, which ends in the sites folder');
+  for (const said of ['does not answer', 'The default accounts could not be written', 'The sample content could not be written']) assert.ok(testing.includes(said), said);
+});
