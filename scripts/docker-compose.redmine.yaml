@@ -10,6 +10,10 @@ services:
   redmine:
     image: "redmine:${REDMINE_VERSION:-7.0.3}"
     container_name: ddev-${DDEV_SITENAME}-redmine
+    # As the project's user (its UID and GID), so what Redmine keeps beside its database (its attachments, in
+    # ../redmine/files) is the project's own: the row's Backup archives it, and removing the project removes it. The
+    # image's entrypoint does its root-only steps (the owner of its files, then its own user) only as root.
+    user: "${DDEV_UID}:${DDEV_GID}"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
@@ -23,8 +27,12 @@ services:
         condition: service_healthy
     env_file:
       - ${DDEV_APPROOT}/redmine/env
+    # Its plugins' assets where any user may write: the image's folder is its redmine user's.
+    tmpfs:
+      - /usr/src/redmine/public/plugin_assets:mode=1777
     volumes:
-      - redmine_files:/usr/src/redmine/files
+      # Its attachments, in the project folder, where the image declares its files volume.
+      - ${DDEV_APPROOT}/redmine/files:/usr/src/redmine/files
       # The plugin's scripts, which the builder and the tool run in this container.
       - ${DDEV_APPROOT}/redmine:/opt/webship:ro
     environment:
@@ -35,7 +43,5 @@ services:
       REDMINE_DB_USERNAME: db
       REDMINE_DB_PASSWORD: db
       REDMINE_DB_DATABASE: db
-# Named after the project, so removing the project removes it with its database, and a new build starts empty.
-volumes:
-  redmine_files:
-    name: ddev-${DDEV_SITENAME}-redmine-files
+      # A home the project's user may write.
+      HOME: /tmp

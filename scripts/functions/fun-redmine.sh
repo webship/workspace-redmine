@@ -6,8 +6,8 @@
 #
 # Placed by `plugins.sh --install redmine` in core/scripts/plugins/redmine/functions/, where bootstrap sources it after
 # the core's own functions. Everything runs in containers, never on the host:
-#   - DDEV (the default): Redmine's image is a service of a generic project, on the project's own PostgreSQL (the db
-#     service), at https://<name>.ddev.site; the project's web container keeps the mail catcher.
+#   - DDEV (the default): Redmine's image is a service of a generic project, as the project's user, on the project's own
+#     PostgreSQL (the db service), at https://<name>.ddev.site; the project's web container keeps the mail catcher.
 #   - Docker Compose, Podman and Kubernetes (--runtime docker, podman or kubernetes): the official image is the web
 #     container's (rt_stack image), on the project's PostgreSQL, its server started by the stack (rt_serve) through the
 #     image's own entrypoint, at the address the runtime gives it (http://127.0.0.1:<port>, or a Kubernetes node's).
@@ -145,6 +145,9 @@ ENVEOF
 
   if [ "${runtime}" = 'ddev' ] ; then
     cp "${from}/docker-compose.redmine.yaml" "${project_path}/.ddev/docker-compose.redmine.yaml" || return 1 ;
+    # The attachments' folder, made by the project's user before Redmine starts (a folder Docker made for the mount
+    # would be root's).
+    mkdir -p "${project_path}/${REDMINE_FILES}/files" || return 1 ;
     printf 'REDMINE_VERSION=%s\n' "${version}" > "${project_path}/.ddev/.env" || return 1 ;
     cat > "${project_path}/.ddev/config.redmine.yaml" <<YAMLEOF
 # Redmine in this project: its service (docker-compose.redmine.yaml), the release in .env, the site's own values in
@@ -178,7 +181,10 @@ DOCKEREOF
 function redmine_exec() {
   local line="$1" ;
   if [ "$(redmine_runtime)" = 'ddev' ] ; then
-    ddev exec -s redmine "gosu redmine bash -c $(printf '%q' "cd /usr/src/redmine && ${line}")" ;
+    # As the user Redmine runs as: the project's (the container's own) on a site whose service runs as the project's
+    # user, the image's redmine user, which the container's root becomes, on one built before it did.
+    local inner ; inner="$(printf '%q' "cd /usr/src/redmine && ${line}")" ;
+    ddev exec -s redmine "if [ \"\$(id -u)\" = 0 ] ; then exec gosu redmine bash -c ${inner} ; else exec bash -c ${inner} ; fi" ;
   else
     ddev exec "set -a ; . /var/www/html/${REDMINE_FILES}/env ; set +a ; cd /usr/src/redmine && ${line}" ;
   fi

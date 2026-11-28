@@ -56,17 +56,16 @@ A project of the same name is deleted first, with its database and its files. Ev
 in English (its trackers, statuses, roles and workflows), turns its REST API on, and sets the address of its links.
 
 - **On DDEV** Redmine's image is a service of a generic project, on the project's PostgreSQL 17, at
-  `https://mysite.ddev.site`. The project's web container keeps the mail catcher, at `https://mysite.ddev.site:8026`.
+  `https://mysite.ddev.site`, its server running as your user. The project's web container keeps the mail catcher, at
+  `https://mysite.ddev.site:8026`.
 - **On Docker Compose, Podman and Kubernetes** the official image is the web container's (the workspace's generic
   stack), on the project's PostgreSQL 17, at the address the runtime gives it: `http://127.0.0.1:<port>` on Docker
   Compose and Podman, a node's address and port on Kubernetes; the build says it. Its own entrypoint writes the
   database settings, migrates the database and starts the server, as your user.
 - Lando and Docksal are not proven for Redmine yet: asked for one, the builder says so and changes nothing.
-- **Its attachments:** on DDEV in the project's volume `ddev-mysite-redmine-files`, which the row's Backup does not
-  hold; on Docker Compose, Podman and Kubernetes in the project folder (`redmine/files`), which the project's archive
-  holds, and which a new web container (a pod started again on Kubernetes) has too. A Docker Compose site built with
-  the plugin's 1.0.2 keeps them in its web container's own volume until it is upgraded: see
-  [Upgrading a Docker Compose site from 1.0.2](#upgrading-a-docker-compose-site-from-102).
+- **Its attachments** are in the project folder (`redmine/files`) on every runtime, which the row's Backup holds; a
+  new container (a pod started again on Kubernetes) has them too. A site built with the plugin's 1.0.2 keeps them in a
+  volume until it is upgraded: see [Upgrading a site from 1.0.2](#upgrading-a-site-from-102).
 
 The site's own values, its secret key and the password of its first administrator (`admin`, as
 `REDMINE_ADMIN_PASSWORD`), are made for it and kept in `redmine/env` of the project, which only you can read. The
@@ -92,15 +91,31 @@ assigned to the member, in the version "Sprint 1", with a note), "The usage page
 the member) and "An issue opened by someone outside the project" (a Feature opened by the stranger: the tracker treats
 it as from outside the project).
 
-### Upgrading a Docker Compose site from 1.0.2
+### Upgrading a site from 1.0.2
 
-A site built on Docker Compose with the plugin's 1.0.2 keeps its attachments in its web container's own volume
-(`/usr/src/redmine/files`), which the row's Backup does not hold and a new web container does not have. A site built
-again with this release has them in the project folder. To keep a site as it is, move them there once: the tool
-brings the site's copy of the plugin's scripts up to this release, then, from the site's folder:
+A site built with the plugin's 1.0.2 keeps its attachments in a volume, which the row's Backup does not hold: on DDEV
+the project's `ddev-mysite-redmine-files`, on Docker Compose its web container's own (`/usr/src/redmine/files`), which
+a new web container does not have. A site built again with this release has them in the project folder. To keep a site
+as it is, once the plugin is updated, move them there, from the site's folder (`~/workspace/dev/mysite`, or `test`,
+`sandboxes`, `demos`).
+
+On DDEV, where Redmine's service then runs as your user:
 
 ```bash
-cd ~/workspace/dev && bash cmd-tools-redmine-cli.sh mysite    # the sites folder (dev, test, sandboxes or demos)
+cd ~/workspace/dev/mysite
+mkdir -p redmine/files
+docker cp ddev-mysite-redmine:/usr/src/redmine/files/. redmine/files/
+cp ~/workspace/core/scripts/plugins/redmine/docker-compose.redmine.yaml .ddev/
+ddev restart
+docker volume rm ddev-mysite-redmine-files
+```
+
+The last line removes the old volume, which nothing mounts any more (removing the project would leave it).
+
+On Docker Compose, where the site's copy of the plugin's scripts comes up to this release first (the tool does it):
+
+```bash
+cd ~/workspace/dev && bash cmd-tools-redmine-cli.sh mysite
 cd mysite
 mkdir -p redmine/files
 docker compose cp web:/usr/src/redmine/files/. redmine/files/
@@ -109,7 +124,7 @@ docker compose restart web
 ```
 
 Redmine then reads and writes its attachments in `redmine/files`, and the row's Backup holds them. The copy left in
-the container's volume is not used any more.
+the old volume is not used any more.
 
 ## The tool
 
