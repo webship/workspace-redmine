@@ -3,7 +3,7 @@
  *
  * What the package carries is placed by the installer from the manifest: the builder and the tool in the sites
  * folders, their functions and argparse under core/scripts/plugins/redmine/ (with the compose file of Redmine's
- * service, the Rails runner script the builder runs in its container, the start of a site on Docker Compose and the
+ * service, the Rails runner script the builder runs in its container, the start of a site on another runtime and the
  * first feature of a site), and its AI items (ai/ in this package) in the folder of their kind.
  *
  * What register() adds: the issues of a Redmine as work items (@webship.co/workspace-tracker): the REDMINE menu on
@@ -45,7 +45,7 @@ export function assistantContext(): string {
   return [
     'Redmine (a plugin, @webship.co/workspace-redmine), the open-source project management and issue tracking software: a site is built with',
     '`bash cmd-redmine-project.sh <name> --install --add-users --sample-content` from a sites folder (dev, test, sandboxes, demos):',
-    'the official image (7.0.3 by default, `--redmine-version`) on the project\'s own PostgreSQL, on DDEV at https://<name>.ddev.site, or with `--runtime docker` on Docker Compose at http://127.0.0.1:<port>.',
+    'the official image (7.0.3 by default, `--redmine-version`) on the project\'s own PostgreSQL, on DDEV at https://<name>.ddev.site, or with `--runtime docker`, `podman` or `kubernetes` at the address the runtime gives it (the build says it).',
     'The build loads Redmine\'s default data and turns its REST API on; `--install` makes the workspace account an administrator; `--add-users` adds the default accounts (owner: Manager, member: Developer, reader: Reporter of the project Webship site, stranger: no membership), each @example.com;',
     '`--sample-content` adds the issues of Webship site, its version "Sprint 1" and a note.',
     '`bash cmd-tools-redmine-cli.sh <name>` says what the site is and lists its accounts; `--run "<task>"` runs one of Redmine\'s own rake tasks in its container,',

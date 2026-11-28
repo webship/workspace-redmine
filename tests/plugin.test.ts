@@ -60,16 +60,36 @@ test('every shell script parses, and the site\'s script is Ruby the site\'s own 
   assert.doesNotMatch(rb, /update_column/, 'the sample content is made as it should be, not changed after');
 });
 
-test('the runtimes: DDEV and Docker Compose; another is refused before anything is changed', () => {
-  assert.match(read('scripts/args/arg-redmine.sh'), /choices=\['ddev', 'docker'\]/);
+test('the runtimes: DDEV, Docker Compose, Podman and Kubernetes; another is refused before anything is changed', () => {
+  assert.match(read('scripts/args/arg-redmine.sh'), /choices=\['ddev', 'docker', 'podman', 'kubernetes'\]/);
   const build = FUN.slice(FUN.indexOf('function redmine_build()'));
   const guard = build.indexOf('case "${runtime}" in');
   assert.ok(guard > 0 && guard < build.indexOf('drop_database') && guard < build.indexOf('ddev config'), 'the runtime is asked first');
-  assert.ok(build.includes('Redmine builds on DDEV and on Docker Compose for now (--runtime ddev or docker), not on ${runtime}: that runtime is not proven for it yet. Nothing was changed.'));
+  assert.match(build, /    ddev\|docker\|podman\|kubernetes\) ;;\n/, 'the four runtimes');
+  assert.ok(build.includes('Redmine builds on DDEV, Docker Compose, Podman and Kubernetes for now (--runtime ddev, docker, podman or kubernetes), not on ${runtime}: that runtime is not proven for it yet. Nothing was changed.'));
+  for (const f of ['README.md', 'src/index.ts', 'commands/cmd-redmine-project.sh', 'scripts/functions/fun-redmine.sh', 'scripts/args/arg-redmine.sh', ...manifest.ai.agents, ...manifest.ai.prompts]) {
+    assert.doesNotMatch(read(f), /Podman, Kubernetes, Lando and Docksal are not proven|Other runtimes are not proven|not proven on the other runtimes/, `${f}: no runtime said unproven that is proven`);
+  }
+  const features = read('features/redmine-runtimes.feature');
+  for (const [rt, menu] of [['docker', 'DOCKER'], ['podman', 'PODMAN'], ['kubernetes', 'K8S']]) {
+    assert.match(features, new RegExp(`@needs-runtime-${rt} @needs-platform-redmine\\n  Scenario: A site built on [A-Za-z ]+ runs at [a-z ]+, with the ${menu} menu`), `the dashboard's row of a ${rt} site`);
+    assert.match(features, new RegExp(`When I open "/login" on the "${rt}" site`), `the login screen of a ${rt} site`);
+  }
   assert.ok(build.indexOf('redmine_site defaults') > build.indexOf('redmine_wait'), 'the default data once the site answers');
   const write = FUN.slice(FUN.indexOf('function redmine_write_config()'), FUN.indexOf('function redmine_exec()'));
   assert.match(write, /rt_claim redmine/, 'the plugin claims the project on another runtime');
-  assert.match(write, /rt_stack image "redmine:\$\{version\}"/, 'the official image, pinned, is the web container\'s');
+  assert.match(write, /rt_stack image "docker\.io\/library\/redmine:\$\{version\}"/, 'the official image, pinned, is the web container\'s, by its full name, which Podman needs');
+  assert.ok(write.indexOf("printf 'REDMINE_ATTACHMENTS_STORAGE_PATH=/var/www/html/%s/files\\n' \"${REDMINE_FILES}\" >> \"${env}\"") > write.indexOf("if [ \"${runtime}\" = 'ddev' ]"), 'off DDEV the attachments in the project folder: not in the image\'s volume, which a new container or pod does not have and a Backup does not take');
+  const serve = read('scripts/redmine-serve.sh');
+  assert.ok(serve.indexOf('mkdir -p "${REDMINE_ATTACHMENTS_STORAGE_PATH}" || exit 1 ;') > 0 && serve.indexOf("printf 'production:\\n  attachments_storage_path: %s\\n' \"${REDMINE_ATTACHMENTS_STORAGE_PATH}\" > config/configuration.yml || exit 1 ;") > serve.indexOf('mkdir -p') && serve.indexOf('configuration.yml') < serve.indexOf('exec /docker-entrypoint.sh'), 'Redmine pointed at that folder before it starts, when the site\'s env says so');
+  const readme = read('README.md');
+  const upgrade = readme.slice(readme.indexOf('On Docker Compose, where the site\'s copy'), readme.indexOf('## The tool'));
+  const steps = ['bash cmd-tools-redmine-cli.sh mysite', 'mkdir -p redmine/files', 'docker compose cp web:/usr/src/redmine/files/. redmine/files/', "echo 'REDMINE_ATTACHMENTS_STORAGE_PATH=/var/www/html/redmine/files' >> redmine/env", 'docker compose restart web'];
+  for (let i = 1; i < steps.length; i++) assert.ok(upgrade.indexOf(steps[i - 1]) >= 0 && upgrade.indexOf(steps[i - 1]) < upgrade.indexOf(steps[i]), `the upgrade of a 1.0.2 Docker Compose site, in order: ${steps[i]}`);
+  assert.match(readme, /\*\*Its attachments\*\* are in the project folder \(`redmine\/files`\) on every runtime, which the row's Backup holds/, 'the attachments in the project folder on every runtime');
+  const ddevUpgrade = readme.slice(readme.indexOf('On DDEV, where Redmine\'s service then runs as your user:'), readme.indexOf('On Docker Compose, where the site\'s copy'));
+  const ddevSteps = ['mkdir -p redmine/files', 'docker cp ddev-mysite-redmine:/usr/src/redmine/files/. redmine/files/', 'cp ~/workspace/core/scripts/plugins/redmine/docker-compose.redmine.yaml .ddev/', 'ddev restart', 'docker volume rm ddev-mysite-redmine-files'];
+  for (let i = 1; i < ddevSteps.length; i++) assert.ok(ddevUpgrade.indexOf(ddevSteps[i - 1]) >= 0 && ddevUpgrade.indexOf(ddevSteps[i - 1]) < ddevUpgrade.indexOf(ddevSteps[i]), `the upgrade of a 1.0.2 DDEV site, in order: ${ddevSteps[i]}`);
   assert.match(write, /chown -R www-data:www-data \/usr\/src\/redmine\/files \/usr\/src\/redmine\/public\/plugin_assets/, 'what it writes belongs to the host user, whatever its UID');
   assert.match(write, /rt_serve 3000 "bash \$\{REDMINE_FILES\}\/redmine-serve\.sh"/);
   assert.match(write, /umask 077/, 'the site\'s own values are readable by their owner only');
@@ -84,7 +104,12 @@ test('Redmine\'s service on DDEV: the official image takes the project\'s addres
   assert.match(compose, /HTTPS_EXPOSE=8457:80,8026:8025/, 'the web container moves, its mail catcher stays at :8026');
   assert.match(compose, /REDMINE_DB_POSTGRES: db/, 'the project\'s own PostgreSQL');
   assert.match(compose, /env_file:\n\s+- \$\{DDEV_APPROOT\}\/redmine\/env/, 'the site\'s own values from its file');
-  assert.match(compose, /name: ddev-\$\{DDEV_SITENAME\}-redmine-files/, 'the files volume is the project\'s, removed with it');
+  assert.match(compose, /\n    user: "\$\{DDEV_UID\}:\$\{DDEV_GID\}"\n/, 'Redmine as the project\'s user: what it writes in the project folder is the project\'s own');
+  assert.ok(compose.includes('      - ${DDEV_APPROOT}/redmine/files:/usr/src/redmine/files\n'), 'its attachments in the project folder, where the image declares its files volume');
+  assert.doesNotMatch(compose, /redmine_files|redmine-files/, 'no files volume');
+  assert.match(compose, /\n    tmpfs:\n      - \/usr\/src\/redmine\/public\/plugin_assets:mode=1777\n/, 'its plugins\' assets where any user may write');
+  assert.match(compose, /\n      HOME: \/tmp\n/);
+  assert.match(FUN.slice(FUN.indexOf('function redmine_write_config()')), /cp "\$\{from\}\/docker-compose\.redmine\.yaml" "\$\{project_path\}\/\.ddev\/docker-compose\.redmine\.yaml" \|\| return 1 ;\n(\s+#.*\n)+\s+mkdir -p "\$\{project_path\}\/\$\{REDMINE_FILES\}\/files" \|\| return 1 ;/, 'the folder made by the project\'s user before the service starts');
   assert.doesNotMatch(compose, /SECRET_KEY_BASE:|ADMIN_PASSWORD:/, 'no secret in the compose file');
 });
 
@@ -92,7 +117,7 @@ test('the functions carry the names the core\'s tools look for, and run Redmine\
   for (const fn of ['set_redmine_users', 'add_redmine_users', 'cancel_redmine_users', 'testing_configure_redmine', 'redmine_build', 'redmine_cli_tool', 'redmine_connect']) {
     assert.match(FUN, new RegExp(`^function ${fn}\\(\\) \\{`, 'm'), `${fn} is defined`);
   }
-  assert.match(FUN, /ddev exec -s redmine "gosu redmine bash -c/, 'on DDEV in Redmine\'s container, as its own user');
+  assert.match(FUN, /ddev exec -s redmine "if \[ \\"\\\$\(id -u\)\\" = 0 \] ; then exec gosu redmine bash -c \$\{inner\} ; else exec bash -c \$\{inner\} ; fi" ;/, 'on DDEV in Redmine\'s container, as the user it runs as: the project\'s, or redmine on a site built before');
   assert.match(FUN, /RAILS_LOG_TO_STDOUT= bundle exec rails runner \$\(redmine_scripts_dir\)\/redmine-site\.rb/, 'the site\'s own Rails runner, its log to its file');
   assert.match(FUN, /redmine_exec "bundle exec rake \$\{RUN\}"/, 'the tool runs Redmine\'s own tasks');
   assert.match(FUN, /users=\(owner member reader stranger\);/);
@@ -108,7 +133,7 @@ test('the assistant is told how to build, test and connect a site', () => {
   const told = assistantContext();
   for (const c of COMMANDS) assert.ok(told.includes(c), `the assistant is told about ${c}`);
   for (const a of AGENTS) assert.ok(told.includes(a), `the assistant is told about ${a}`);
-  assert.match(told, /--runtime docker/);
+  assert.match(told, /with `--runtime docker`, `podman` or `kubernetes` at the address the runtime gives it/);
   assert.match(told, /--connect <login>/);
 });
 

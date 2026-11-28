@@ -5,8 +5,8 @@ Redmine, the open-source project management and issue tracking software, for the
 brings:
 
 - **a builder**, `cmd-redmine-project.sh`: a real Redmine site from the official image on the project's own PostgreSQL,
-  on DDEV (the default) or on Docker Compose, with Redmine's default data and its REST API on, its default accounts as
-  members of a sample project, and its issues and version;
+  on DDEV (the default), Docker Compose, Podman or Kubernetes, with Redmine's default data and its REST API on, its
+  default accounts as members of a sample project, and its issues and version;
 - **a tool**, `cmd-tools-redmine-cli.sh`: what a site is and its accounts, Redmine's own tasks in its container, the
   default accounts, the sample content, a clean-up after a stopped test run, and the dashboard's connection;
 - **the step pack** [`@webship-js/redmine-steps`](https://github.com/webship/redmine-steps) wired into the
@@ -31,7 +31,8 @@ bash core/scripts/plugins.sh --configure redmine
 
 - A sites folder: one of the `dev`, `test`, `sandboxes` or `demos` plugins. The commands are placed there.
 - The AI folders `ai-agents`, `ai-skills`, `ai-commands` and `ai-prompts`, where its AI items land.
-- A container runtime: DDEV, or Docker with the workspace's container runtimes (`--runtime docker`).
+- A container runtime: DDEV (the default), or Docker Compose, Podman or Kubernetes with the workspace's container
+  runtimes (`--runtime docker`, `podman` or `kubernetes`).
 - About 700 MB of disk for the image the first time, and about 400 MB of memory for a running site.
 
 ## Build a site
@@ -48,19 +49,23 @@ bash cmd-redmine-project.sh mysite --install --add-users --runtime docker
 | `--add-users` | With `--install`: the default accounts, each a member of the project Webship site in its role |
 | `--sample-content` | With `--install --add-users`: the issues of Webship site, its version "Sprint 1" and a note |
 | `--redmine-version <x.y.z>` | The release of the official image: 7.0.3 by default |
-| `--runtime ddev` or `--runtime docker` | DDEV (the default, or `container.runtime` of `settings.yml`) or Docker Compose |
+| `--runtime <runtime>` | `ddev` (the default, or `container.runtime` of `settings.yml`), `docker` (Docker Compose), `podman` or `kubernetes` |
 | `--launch` | Open the site when it is ready |
 
 A project of the same name is deleted first, with its database and its files. Every build loads Redmine's default data
 in English (its trackers, statuses, roles and workflows), turns its REST API on, and sets the address of its links.
 
 - **On DDEV** Redmine's image is a service of a generic project, on the project's PostgreSQL 17, at
-  `https://mysite.ddev.site`. The project's web container keeps the mail catcher, at `https://mysite.ddev.site:8026`.
-- **On Docker Compose** the official image is the web container's (the workspace's generic stack), on the project's
-  PostgreSQL 17, at `http://127.0.0.1:<port>`; the build says the address. Its own entrypoint writes the database
-  settings, migrates the database and starts the server, as your user.
-- Podman, Kubernetes, Lando and Docksal are not proven for Redmine yet: asked for one, the builder says so and changes
-  nothing.
+  `https://mysite.ddev.site`, its server running as your user. The project's web container keeps the mail catcher, at
+  `https://mysite.ddev.site:8026`.
+- **On Docker Compose, Podman and Kubernetes** the official image is the web container's (the workspace's generic
+  stack), on the project's PostgreSQL 17, at the address the runtime gives it: `http://127.0.0.1:<port>` on Docker
+  Compose and Podman, a node's address and port on Kubernetes; the build says it. Its own entrypoint writes the
+  database settings, migrates the database and starts the server, as your user.
+- Lando and Docksal are not proven for Redmine yet: asked for one, the builder says so and changes nothing.
+- **Its attachments** are in the project folder (`redmine/files`) on every runtime, which the row's Backup holds; a
+  new container (a pod started again on Kubernetes) has them too. A site built with the plugin's 1.0.2 keeps them in a
+  volume until it is upgraded: see [Upgrading a site from 1.0.2](#upgrading-a-site-from-102).
 
 The site's own values, its secret key and the password of its first administrator (`admin`, as
 `REDMINE_ADMIN_PASSWORD`), are made for it and kept in `redmine/env` of the project, which only you can read. The
@@ -85,6 +90,41 @@ In Webship site (`webship-site`): "The greeting script says Helo instead of Hell
 assigned to the member, in the version "Sprint 1", with a note), "The usage page spells greeting as greting" (a Bug by
 the member) and "An issue opened by someone outside the project" (a Feature opened by the stranger: the tracker treats
 it as from outside the project).
+
+### Upgrading a site from 1.0.2
+
+A site built with the plugin's 1.0.2 keeps its attachments in a volume, which the row's Backup does not hold: on DDEV
+the project's `ddev-mysite-redmine-files`, on Docker Compose its web container's own (`/usr/src/redmine/files`), which
+a new web container does not have. A site built again with this release has them in the project folder. To keep a site
+as it is, once the plugin is updated, move them there, from the site's folder (`~/workspace/dev/mysite`, or `test`,
+`sandboxes`, `demos`).
+
+On DDEV, where Redmine's service then runs as your user:
+
+```bash
+cd ~/workspace/dev/mysite
+mkdir -p redmine/files
+docker cp ddev-mysite-redmine:/usr/src/redmine/files/. redmine/files/
+cp ~/workspace/core/scripts/plugins/redmine/docker-compose.redmine.yaml .ddev/
+ddev restart
+docker volume rm ddev-mysite-redmine-files
+```
+
+The last line removes the old volume, which nothing mounts any more (removing the project would leave it).
+
+On Docker Compose, where the site's copy of the plugin's scripts comes up to this release first (the tool does it):
+
+```bash
+cd ~/workspace/dev && bash cmd-tools-redmine-cli.sh mysite
+cd mysite
+mkdir -p redmine/files
+docker compose cp web:/usr/src/redmine/files/. redmine/files/
+echo 'REDMINE_ATTACHMENTS_STORAGE_PATH=/var/www/html/redmine/files' >> redmine/env
+docker compose restart web
+```
+
+Redmine then reads and writes its attachments in `redmine/files`, and the row's Backup holds them. The copy left in
+the old volume is not used any more.
 
 ## The tool
 

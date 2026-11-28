@@ -6,9 +6,10 @@
 # installed into.
 #
 # Build a Redmine site in containers from the official image, on the project's own PostgreSQL: on DDEV at
-# https://<name>.ddev.site (the default), or on Docker Compose with --runtime docker at http://127.0.0.1:<port>. With
-# --install the workspace account is an administrator of the site; with --add-users the default accounts are members
-# of the project Webship site; with --sample-content its issues, its version Sprint 1 and a note.
+# https://<name>.ddev.site (the default), or on Docker Compose, Podman or Kubernetes with --runtime docker, podman or
+# kubernetes, at the address the runtime gives it. With --install the workspace account is an administrator of the
+# site; with --add-users the default accounts are members of the project Webship site; with --sample-content its
+# issues, its version Sprint 1 and a note.
 
 # Bootstrap.
 # Find the workspace tooling from this script, so a fresh clone needs no setup.

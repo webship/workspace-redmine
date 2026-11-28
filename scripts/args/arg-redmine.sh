@@ -6,8 +6,8 @@ parser.add_argument('PROJECT_NAME',
 parser.add_argument('--runtime',
                     dest='RUNTIME',
                     default="_none_",
-                    choices=['ddev', 'docker'],
-                    help='The container runtime to build on: ddev (the default, or container.runtime of settings.yml) or docker (Docker Compose). Redmine is not proven on the other runtimes yet.')
+                    choices=['ddev', 'docker', 'podman', 'kubernetes'],
+                    help='The container runtime to build on: ddev (the default, or container.runtime of settings.yml), docker (Docker Compose), podman or kubernetes. Redmine is not proven on Lando or Docksal yet.')
 parser.add_argument('-i', '--install',
                     action='store_true',
                     default=False,
