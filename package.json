@@ -1,6 +1,6 @@
 {
   "name": "@webship.co/workspace-redmine",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Redmine for Webship Workspace: the builder (`cmd-redmine-project.sh`, a site of the open-source project management and issue tracking software from the official image on the project's own PostgreSQL, in containers: DDEV by default, Docker Compose too, with the default accounts as members of a sample project and its issues and version) and its tool in every sites folder, the Redmine step pack wired into the testing setup, the issues of a Redmine as work items of the tracker family (list, read, analyze, and do the work with the workspace's AI CLI on a branch; notes, time, moves and assignees after a person's click, writes off by default), and its AI items in their folders.",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
