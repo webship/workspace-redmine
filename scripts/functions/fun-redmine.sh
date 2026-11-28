@@ -8,9 +8,10 @@
 # the core's own functions. Everything runs in containers, never on the host:
 #   - DDEV (the default): Redmine's image is a service of a generic project, on the project's own PostgreSQL (the db
 #     service), at https://<name>.ddev.site; the project's web container keeps the mail catcher.
-#   - Docker Compose (--runtime docker): the official image is the web container's (rt_stack image), on the project's
-#     PostgreSQL, its server started by the stack (rt_serve) through the image's own entrypoint, at http://127.0.0.1:<port>.
-# Podman, Kubernetes, Lando and Docksal are not proven yet: asked for one, the builder says so and changes nothing.
+#   - Docker Compose, Podman and Kubernetes (--runtime docker, podman or kubernetes): the official image is the web
+#     container's (rt_stack image), on the project's PostgreSQL, its server started by the stack (rt_serve) through the
+#     image's own entrypoint, at the address the runtime gives it (http://127.0.0.1:<port>, or a Kubernetes node's).
+# Lando and Docksal are not proven yet: asked for one, the builder says so and changes nothing.
 #
 # The container tool has no project type for Redmine, so a site of this plugin is recognised by a file on DDEV
 # (.ddev/config.redmine.yaml, written by the builder) and by the plugin's claim on the other runtimes (rt_claim).
@@ -154,10 +155,15 @@ YAMLEOF
     return 0 ;
   fi
 
-  # Another runtime: the official image is the web container's, and the stack starts it (redmine-serve.sh).
+  # Another runtime: the official image is the web container's, and the stack starts it (redmine-serve.sh). The
+  # attachments go into the project folder (redmine/files), not into the image's own /usr/src/redmine/files: a volume of
+  # the container there, which a new container does not have (a pod started again on Kubernetes) and the row's Backup
+  # of the project folder does not take. redmine-serve.sh points Redmine there.
+  printf 'REDMINE_ATTACHMENTS_STORAGE_PATH=/var/www/html/%s/files\n' "${REDMINE_FILES}" >> "${env}" || return 1 ;
+  # The image by its registry's full name: Podman does not take a short name it would have to pick a registry for.
   ( cd "${project_path}" \
     && rt_claim redmine \
-    && rt_stack image "redmine:${version}" \
+    && rt_stack image "docker.io/library/redmine:${version}" \
     && rt_web_build redmine <<'DOCKEREOF'
 # What Redmine writes while it runs (its files, its plugins' assets) belongs to the host user, www-data with the host's
 # UID by now; the folders the image leaves open to everyone (config, log, tmp, public/assets) stay as they are.
@@ -245,8 +251,8 @@ function redmine_build() {
   local runtime ; runtime="$(cd "${WORKSPACE_ROOT}/${doc_name}" && redmine_runtime)" ;
 
   case "${runtime}" in
-    ddev|docker) ;;
-    *) echo "Redmine builds on DDEV and on Docker Compose for now (--runtime ddev or docker), not on ${runtime}: that runtime is not proven for it yet. Nothing was changed." ; exit 1 ;;
+    ddev|docker|podman|kubernetes) ;;
+    *) echo "Redmine builds on DDEV, Docker Compose, Podman and Kubernetes for now (--runtime ddev, docker, podman or kubernetes), not on ${runtime}: that runtime is not proven for it yet. Nothing was changed." ; exit 1 ;;
   esac
   if [ "${runtime}" != 'ddev' ] && ! declare -f rt_stack > /dev/null ; then
     echo "--runtime ${runtime} needs a Webship Workspace with the container runtimes (webship/workspace#694, #841): update the workspace, or build on DDEV." ;

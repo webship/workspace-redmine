@@ -1,6 +1,6 @@
 ---
 name: redmine-site-builder
-description: Use this agent to build, maintain or remove a Redmine site (the open-source project management and issue tracking software) in the Webship Workspace — a site from the official image on the project's own PostgreSQL, in containers (DDEV by default, Docker Compose with --runtime docker), by `cmd-redmine-project.sh`, with the workspace account as an administrator, the default accounts as members of the project Webship site and optional sample content (issues, a version, a note); Redmine's own tasks, the sample content, a clean-up after a stopped test run, the default accounts and the dashboard's connection through `cmd-tools-redmine-cli.sh`; clones and removal, always in containers. Invoke for "build a Redmine site", "add the sample project", "add the default accounts to this site", "connect the dashboard to this Redmine", "tidy the site after a test run".
+description: Use this agent to build, maintain or remove a Redmine site (the open-source project management and issue tracking software) in the Webship Workspace — a site from the official image on the project's own PostgreSQL, in containers (DDEV by default; Docker Compose, Podman or Kubernetes with --runtime), by `cmd-redmine-project.sh`, with the workspace account as an administrator, the default accounts as members of the project Webship site and optional sample content (issues, a version, a note); Redmine's own tasks, the sample content, a clean-up after a stopped test run, the default accounts and the dashboard's connection through `cmd-tools-redmine-cli.sh`; clones and removal, always in containers. Invoke for "build a Redmine site", "add the sample project", "add the default accounts to this site", "connect the dashboard to this Redmine", "tidy the site after a test run".
 model: fable
 tools:
   - Bash
@@ -34,8 +34,9 @@ bash cmd-redmine-project.sh myold --install --redmine-version 7.0.3
 
 The site is the official image (`redmine`) on the project's own PostgreSQL 17. On DDEV the image
 is a service of a generic project and takes the project's address, `https://mysite.ddev.site`; the project's web
-container keeps the mail catcher at `https://mysite.ddev.site:8026`. On Docker Compose (`--runtime docker`) the image
-is the web container's, at `http://127.0.0.1:<port>`; the build says the address. Other runtimes are not proven for
+container keeps the mail catcher at `https://mysite.ddev.site:8026`. On Docker Compose, Podman and Kubernetes
+(`--runtime docker`, `podman` or `kubernetes`) the image is the web container's, at the address the runtime gives it
+(`http://127.0.0.1:<port>`, or a Kubernetes node's); the build says the address. Lando and Docksal are not proven for
 Redmine yet: the builder says so and stops before it changes anything. The first build takes a minute or two: the
 image is about 700 MB, and the first start migrates the database. Check the free memory and disk first
 (`free -g`, `df -h /`) and build one site at a time: a site takes about 400 MB of memory.
@@ -46,7 +47,7 @@ image is about 700 MB, and the first start migrates the database. Check the free
 | `--add-users` | With `--install`: the default accounts, each a member of the project Webship site in its role |
 | `--sample-content` | With `--install --add-users`: three issues of Webship site (one opened by the stranger), its version "Sprint 1" and a note |
 | `--redmine-version <x.y.z>` | The release of the image: 7.0.3 by default |
-| `--runtime ddev` or `--runtime docker` | The container runtime: DDEV (the default) or Docker Compose |
+| `--runtime <runtime>` | The container runtime: `ddev` (the default), `docker` (Docker Compose), `podman` or `kubernetes` |
 | `--launch` | Open the site when it is ready |
 
 A project of the same name is deleted first, with its database and its files. The site's own values (its secret key,
